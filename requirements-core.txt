@@ -1,0 +1,21 @@
+# SOC Email Log - Core Requirements
+# Minimal dependencies to get the web app running
+
+# Core Web Framework
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+
+# Database
+SQLAlchemy==2.0.45
+
+# HTTP Requests (for future threat intel APIs)
+requests==2.31.0
+
+# Email Validation
+email-validator==2.1.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# That's it! The app will run with just these.
+# For advanced features later, see requirements-full.txt

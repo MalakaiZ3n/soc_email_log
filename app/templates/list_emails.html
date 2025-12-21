@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}All Emails - SOC Email Log{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1 style="color: #3b82f6;"> All Logged Emails</h1>
+    <a href="{{ url_for('main.log_email') }}" class="btn btn-primary">
+         Log New Email
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2>Email Threat Log</h2>
+                <p class="text-muted">Showing {{ emails|length }} emails (Page {{ pagination.page }} of {{ pagination.pages }})</p>
+            </div>
+            <form action="{{ url_for('main.search') }}" method="GET" style="display: flex; gap: 0.5rem;">
+                <input type="text" name="q" placeholder="Search..." style="width: 250px;">
+                <select name="field" style="width: 150px;">
+                    <option value="all">All Fields</option>
+                    <option value="sender">Sender</option>
+                    <option value="domain">Domain</option>
+                    <option value="subject">Subject</option>
+                </select>
+                <button type="submit" class="btn btn-primary"></button>
+            </form>
+        </div>
+    </div>
+    
+    {% if emails %}
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 120px;">Date</th>
+                <th>From</th>
+                <th>Subject</th>
+                <th style="width: 150px;">Sender Domain</th>
+                <th style="width: 120px;">Sender IP</th>
+                <th style="width: 100px;">Type</th>
+                <th style="width: 100px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for email in emails %}
+            <tr>
+                <td style="white-space: nowrap; font-size: 0.85rem;">
+                    {{ email.created_at.strftime('%Y-%m-%d') }}<br>
+                    <span class="text-muted">{{ email.created_at.strftime('%H:%M') }}</span>
+                </td>
+                <td>
+                    <code style="font-size: 0.85rem; display: block; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                        {{ email.from_address }}
+                    </code>
+                </td>
+                <td>
+                    <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ email.subject }}
+                    </div>
+                    {% if email.analyst_notes %}
+                    <small class="text-muted">
+                         {{ email.analyst_notes[:50] }}{% if email.analyst_notes|length > 50 %}...{% endif %}
+                    </small>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if email.sender_domain %}
+                    <span class="badge badge-info">{{ email.sender_domain }}</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if email.sender_ip %}
+                    <code style="font-size: 0.85rem;">{{ email.sender_ip }}</code>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-danger">{{ email.threat_type }}</span>
+                </td>
+                <td>
+                    <a href="{{ url_for('main.view_email', email_id=email.id) }}" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        View
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {# Pagination #}
+    {% if pagination.pages > 1 %}
+    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #2a2f3e;">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('main.list_emails', page=pagination.prev_num) }}" class="btn btn-secondary">
+            ← Previous
+        </a>
+        {% endif %}
+        
+        <span style="padding: 0.75rem 1rem; color: #9ca3af;">
+            Page {{ pagination.page }} of {{ pagination.pages }}
+        </span>
+        
+        {% if pagination.has_next %}
+        <a href="{{ url_for('main.list_emails', page=pagination.next_num) }}" class="btn btn-secondary">
+            Next →
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div style="text-align: center; padding: 3rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+        <h3 style="color: #9ca3af;">No Emails Found</h3>
+        <p class="text-muted" style="margin-top: 0.5rem;">
+            Start logging phishing emails to build your threat intelligence database
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

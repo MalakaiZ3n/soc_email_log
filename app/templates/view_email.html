@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Email Details - SOC Email Log{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('main.list_emails') }}" class="btn btn-secondary">← Back to List</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <h2> Email Threat Details</h2>
+                <p class="text-muted">ID: #{{ email.id }} | Logged: {{ email.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <form method="POST" action="{{ url_for('main.delete_email', email_id=email.id) }}" 
+                      onsubmit="return confirm('Are you sure you want to delete this email?');" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                         Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div>
+            <h3 style="color: #3b82f6; margin-bottom: 1rem;"> Email Information</h3>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">From:</strong><br>
+                <code style="font-size: 1rem;">{{ email.from_address }}</code>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">To:</strong><br>
+                <code style="font-size: 1rem;">{{ email.to_address }}</code>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">Subject:</strong><br>
+                <div style="background: #0f1419; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem;">
+                    {{ email.subject }}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">Threat Type:</strong><br>
+                <span class="badge badge-danger" style="margin-top: 0.5rem;">{{ email.threat_type }}</span>
+            </div>
+        </div>
+        
+        <div>
+            <h3 style="color: #3b82f6; margin-bottom: 1rem;"> Infrastructure</h3>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">Sender Domain:</strong><br>
+                {% if email.sender_domain %}
+                <span class="badge badge-info" style="margin-top: 0.5rem;">{{ email.sender_domain }}</span>
+                {% else %}
+                <span class="text-muted">Not extracted</span>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">Sender IP:</strong><br>
+                {% if email.sender_ip %}
+                <code style="font-size: 1rem;">{{ email.sender_ip }}</code>
+                {% else %}
+                <span class="text-muted">Not extracted</span>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">Mail Server:</strong><br>
+                {% if email.mail_server %}
+                <code>{{ email.mail_server }}</code>
+                {% else %}
+                <span class="text-muted">Not extracted</span>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong class="text-muted">SMTP Sender (Return-Path):</strong><br>
+                {% if email.smtp_sender %}
+                <code>{{ email.smtp_sender }}</code>
+                {% else %}
+                <span class="text-muted">Not extracted</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if email.file_hash or email.virustotal_results %}
+<div class="card">
+    <div class="card-header">
+        <h3> Malware Analysis</h3>
+        <p class="text-muted">Attachment analysis and threat intelligence</p>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        {% if email.file_hash %}
+        <div>
+            <strong class="text-muted">📎 File Hash:</strong><br>
+            <div style="background: #0f1419; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; border-left: 3px solid #f59e0b;">
+                <code style="font-size: 0.95rem; word-break: break-all;">{{ email.file_hash }}</code>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <a href="https://www.virustotal.com/gui/search/{{ email.file_hash }}" 
+                   target="_blank" 
+                   class="btn btn-secondary" 
+                   style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                     Search on VirusTotal
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if email.virustotal_results %}
+        <div>
+            <strong class="text-muted"> VirusTotal Results:</strong><br>
+            <div style="background: #0f1419; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; border-left: 3px solid {% if 'malicious' in email.virustotal_results.lower() or '/' in email.virustotal_results %}#ef4444{% else %}#10b981{% endif %};">
+                <code style="font-size: 1rem;">{{ email.virustotal_results }}</code>
+            </div>
+            {% if '/' in email.virustotal_results %}
+            <p class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem;">
+                 Detected by multiple antivirus engines
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if email.analyst_notes %}
+<div class="card">
+    <div class="card-header">
+        <h3>📝 Analyst Notes</h3>
+    </div>
+    <div style="background: #0f1419; padding: 1rem; border-radius: 6px; white-space: pre-wrap;">{{ email.analyst_notes }}</div>
+</div>
+{% endif %}
+
+{% if iocs_by_type %}
+<div class="card">
+    <div class="card-header">
+        <h3> Extracted IOCs (Indicators of Compromise)</h3>
+        {% set total_iocs = iocs_by_type.values()|map('length')|sum %}
+        <p class="text-muted">{{ total_iocs }} indicators automatically extracted</p>
+    </div>
+    
+    {% for ioc_type, iocs in iocs_by_type.items() %}
+    <div style="margin-bottom: 1.5rem;">
+        <h4 style="color: #10b981; text-transform: capitalize; margin-bottom: 0.75rem;">
+            {{ ioc_type }}s ({{ iocs|length }})
+        </h4>
+        <div style="display: grid; gap: 0.5rem;">
+            {% for ioc in iocs %}
+            <div style="background: #0f1419; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                <code style="font-size: 1rem;">{{ ioc.ioc_value }}</code>
+                {% if ioc.threat_category %}
+                <span class="badge badge-{{ 'danger' if ioc.is_malicious else 'warning' }}" style="margin-left: 0.5rem;">
+                    {{ ioc.threat_category }}
+                </span>
+                {% endif %}
+                {% if ioc.reputation_score %}
+                <span class="text-muted" style="margin-left: 0.5rem; font-size: 0.85rem;">
+                    Reputation: {{ ioc.reputation_score }}/100
+                </span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if email.header_text %}
+<div class="card">
+    <div class="card-header">
+        <h3> Raw Email Header</h3>
+    </div>
+    <details>
+        <summary style="cursor: pointer; padding: 0.75rem; background: #0f1419; border-radius: 6px; font-weight: 600;">
+            Click to view full header
+        </summary>
+        <pre style="margin-top: 1rem; max-height: 500px; overflow-y: auto;">{{ email.header_text }}</pre>
+    </details>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h3> Threat Hunting Actions</h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div style="padding: 1rem; background: #0f1419; border-radius: 6px; border-left: 3px solid #3b82f6;">
+            <strong style="color: #3b82f6;">Search Similar</strong>
+            <p class="text-muted mt-1">Look for other emails from this domain or IP</p>
+            <a href="{{ url_for('main.search', q=email.sender_domain, field='domain') }}" class="btn btn-secondary mt-2" style="font-size: 0.85rem;">
+                Search Domain
+            </a>
+        </div>
+        <div style="padding: 1rem; background: #0f1419; border-radius: 6px; border-left: 3px solid #10b981;">
+            <strong style="color: #10b981;">Enrich IOCs</strong>
+            <p class="text-muted mt-1">Check reputation with VirusTotal/AbuseIPDB</p>
+            <button class="btn btn-secondary mt-2" style="font-size: 0.85rem;" disabled>
+                Configure APIs
+            </button>
+        </div>
+        <div style="padding: 1rem; background: #0f1419; border-radius: 6px; border-left: 3px solid #f59e0b;">
+            <strong style="color: #f59e0b;">Create Detection</strong>
+            <p class="text-muted mt-1">Build a rule to catch similar threats</p>
+            <button class="btn btn-secondary mt-2" style="font-size: 0.85rem;" disabled>
+                Coming Soon
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

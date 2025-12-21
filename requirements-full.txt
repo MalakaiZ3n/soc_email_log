@@ -1,0 +1,25 @@
+# SOC Email Log - Full Requirements
+# All dependencies including advanced analytics
+
+# Core (from requirements-core.txt)
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.45
+requests==2.31.0
+email-validator==2.1.0
+python-dotenv==1.0.0
+
+# Advanced Analytics (optional - install when needed)
+pandas==2.2.0
+numpy==1.26.2
+
+# Visualization (optional - for future dashboard features)
+plotly==5.18.0
+
+# Data Export (optional - for Excel reports)
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# Testing (optional - for development)
+pytest==7.4.3
+pytest-flask==1.3.0

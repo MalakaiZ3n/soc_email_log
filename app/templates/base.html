@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SOC Email Log{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1419;
+            color: #e4e6eb;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Navigation */
+        nav {
+            background: #1a1f2e;
+            border-bottom: 2px solid #2563eb;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        nav .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        nav .logo span {
+            color: #ef4444;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+        
+        nav a {
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+        
+        nav a:hover {
+            color: #3b82f6;
+        }
+        
+        nav a.active {
+            color: #3b82f6;
+            border-bottom: 2px solid #3b82f6;
+        }
+        
+        /* Flash Messages */
+        .flash-messages {
+            margin-bottom: 1.5rem;
+        }
+        
+        .flash {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .flash.success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .flash.error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        /* Cards */
+        .card {
+            background: #1a1f2e;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #2a2f3e;
+        }
+        
+        .card-header {
+            border-bottom: 1px solid #2a2f3e;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header h2 {
+            color: #3b82f6;
+            font-size: 1.5rem;
+        }
+        
+        /* Forms */
+        form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        form input[type="text"],
+        form input[type="email"],
+        form textarea,
+        form select {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0f1419;
+            border: 1px solid #2a2f3e;
+            border-radius: 6px;
+            color: #e4e6eb;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+        
+        form textarea {
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        form input:focus,
+        form textarea:focus,
+        form select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-secondary {
+            background: #374151;
+            color: #e4e6eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th {
+            background: #0f1419;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #9ca3af;
+            border-bottom: 2px solid #2a2f3e;
+        }
+        
+        table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #2a2f3e;
+        }
+        
+        table tr:hover {
+            background: #0f1419;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .badge-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .badge-info {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .badge-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+            border: 1px solid #2a2f3e;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .stat-card .label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        /* Utility */
+        .text-muted {
+            color: #6b7280;
+        }
+        
+        .text-danger {
+            color: #ef4444;
+        }
+        
+        .text-success {
+            color: #10b981;
+        }
+        
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        code {
+            background: #0f1419;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #10b981;
+        }
+        
+        pre {
+            background: #0f1419;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid #2a2f3e;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">SOC <span>Email Log</span></div>
+            <ul>
+                <li><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('main.log_email') }}">Log Email</a></li>
+                <li><a href="{{ url_for('main.list_emails') }}">View All</a></li>
+                <li><a href="{{ url_for('main.stats') }}">Analytics</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
