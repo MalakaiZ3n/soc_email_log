@@ -183,6 +183,42 @@ def delete_email(email_id):
     return redirect(url_for('main.list_emails'))
 
 
+@main.route('/email/<int:email_id>/edit', methods=['GET', 'POST'])
+def edit_email(email_id):
+    """Edit an existing email record."""
+    email = PhishingEmail.query.get_or_404(email_id)
+    
+    if request.method == 'POST':
+        try:
+            # Update email fields
+            email.from_address = request.form.get('from_address')
+            email.to_address = request.form.get('to_address')
+            email.subject = request.form.get('subject')
+            email.sender_domain = request.form.get('sender_domain')
+            email.sender_ip = request.form.get('sender_ip') or None
+            email.mail_server = request.form.get('mail_server')
+            email.smtp_sender = request.form.get('smtp_sender')
+            email.threat_type = request.form.get('threat_type', 'Phishing')
+            email.file_hash = request.form.get('file_hash') or None
+            email.virustotal_results = request.form.get('virustotal_results') or None
+            email.analyst_notes = request.form.get('analyst_notes')
+            email.header_text = request.form.get('raw_header')
+            
+            # Update the updated_at timestamp
+            email.updated_at = datetime.now()
+            
+            db.session.commit()
+            flash('Email updated successfully!', 'success')
+            return redirect(url_for('main.view_email', email_id=email.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating email: {str(e)}', 'error')
+    
+    # GET request - show edit form
+    return render_template('edit_email.html', email=email)
+
+
 @main.route('/search')
 def search():
     """Search emails by various criteria."""

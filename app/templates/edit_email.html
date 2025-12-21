@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Email - SOC Email Log{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('main.view_email', email_id=email.id) }}" class="btn btn-secondary">← Back to Email</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2> Edit Email Log</h2>
+        <p class="text-muted">Update threat intelligence data | Email ID: #{{ email.id }}</p>
+    </div>
+    
+    <form method="POST" action="{{ url_for('main.edit_email', email_id=email.id) }}">
+        <h3 style="color: #10b981; margin-bottom: 1rem;"> Email Information</h3>
+        
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="from_address">From Address</label>
+                <input type="text" name="from_address" id="from_address" 
+                       value="{{ email.from_address }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="to_address">To Address</label>
+                <input type="text" name="to_address" id="to_address" 
+                       value="{{ email.to_address }}" required>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="subject">Subject</label>
+            <input type="text" name="subject" id="subject" 
+                   value="{{ email.subject }}" required>
+        </div>
+        
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="sender_domain">Sender Domain</label>
+                <input type="text" name="sender_domain" id="sender_domain" 
+                       value="{{ email.sender_domain or '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="sender_ip">Sender IP</label>
+                <input type="text" name="sender_ip" id="sender_ip" 
+                       value="{{ email.sender_ip or '' }}">
+            </div>
+        </div>
+        
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="mail_server">Mail Server</label>
+                <input type="text" name="mail_server" id="mail_server" 
+                       value="{{ email.mail_server or '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="smtp_sender">SMTP Sender (Return-Path)</label>
+                <input type="text" name="smtp_sender" id="smtp_sender" 
+                       value="{{ email.smtp_sender or '' }}">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="threat_type">Threat Type</label>
+            <select name="threat_type" id="threat_type">
+                <option value="Phishing" {% if email.threat_type == 'Phishing' %}selected{% endif %}>Phishing</option>
+                <option value="Malware" {% if email.threat_type == 'Malware' %}selected{% endif %}>Malware</option>
+                <option value="Spam" {% if email.threat_type == 'Spam' %}selected{% endif %}>Spam</option>
+                <option value="Spoofing" {% if email.threat_type == 'Spoofing' %}selected{% endif %}>Spoofing</option>
+                <option value="Credential Harvesting" {% if email.threat_type == 'Credential Harvesting' %}selected{% endif %}>Credential Harvesting</option>
+                <option value="Business Email Compromise" {% if email.threat_type == 'Business Email Compromise' %}selected{% endif %}>Business Email Compromise</option>
+            </select>
+        </div>
+        
+        <h3 style="color: #f59e0b; margin-bottom: 1rem; margin-top: 2rem;"> Malware Analysis (Optional)</h3>
+        
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="file_hash">📎 Attachment File Hash (MD5/SHA1/SHA256)</label>
+                <input type="text" name="file_hash" id="file_hash" 
+                       value="{{ email.file_hash or '' }}"
+                       placeholder="e.g., d41d8cd98f00b204e9800998ecf8427e">
+                <small class="text-muted">
+                    If email has attachment, paste its hash here
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="virustotal_results">🛡️ VirusTotal Results</label>
+                <input type="text" name="virustotal_results" id="virustotal_results" 
+                       value="{{ email.virustotal_results or '' }}"
+                       placeholder="e.g., 45/70 detections or VT link">
+                <small class="text-muted">
+                    Scan results (e.g., "45/70" or link to VT report)
+                </small>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="analyst_notes"> Analyst Notes</label>
+            <textarea name="analyst_notes" id="analyst_notes" rows="4" 
+                      placeholder="What did you find? Any patterns? Verdict? Recommendations?">{{ email.analyst_notes or '' }}</textarea>
+            <small class="text-muted">
+                Document your findings: What makes this suspicious? Any patterns you noticed? Your verdict?
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <details style="background: #0f1419; padding: 1rem; border-radius: 6px; border: 1px solid #2a2f3e;">
+                <summary style="cursor: pointer; font-weight: 600; color: #9ca3af;">
+                     Edit Raw Header
+                </summary>
+                <textarea name="raw_header" rows="10" style="margin-top: 1rem; width: 100%; font-family: 'Courier New', monospace;">{{ email.header_text or '' }}</textarea>
+            </details>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-success">
+                ✓ Save Changes
+            </button>
+            <a href="{{ url_for('main.view_email', email_id=email.id) }}" class="btn btn-secondary">
+                ✕ Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="background: #0f1419; border: 1px solid #2a2f3e;">
+    <div class="card-header">
+        <h3> Edit Tips</h3>
+    </div>
+    <ul style="margin-left: 1.5rem;">
+        <li><strong>Malware Fields:</strong> Add file hash and VirusTotal results to existing logs</li>
+        <li><strong>Analyst Notes:</strong> Update your analysis as you learn more</li>
+        <li><strong>Threat Type:</strong> Reclassify if needed (e.g., Phishing → Malware)</li>
+        <li><strong>IOCs:</strong> Note that IOCs are extracted from headers and won't auto-update</li>
+    </ul>
+</div>
+{% endblock %}

@@ -129,6 +129,7 @@ class EmailHeaderParser:
         """
         Extract sender IP from Received headers.
         Looks for the FIRST external IP (closest to actual sender).
+        Supports both IPv4 and IPv6 addresses.
         """
         # Find all Received headers (they're in reverse chronological order)
         received_headers = re.findall(r'Received:.*?(?=\nReceived:|\n[A-Z]|\Z)', raw_header, re.DOTALL | re.IGNORECASE)
@@ -137,7 +138,20 @@ class EmailHeaderParser:
         if received_headers:
             last_received = received_headers[-1]
             
-            # Look for IP patterns
+            # IPv6 patterns (check first - more specific)
+            ipv6_patterns = [
+                r'\[([0-9a-fA-F:]+::[0-9a-fA-F:]*)\]',  # [IPv6]
+                r'\[([0-9a-fA-F]{1,4}:[0-9a-fA-F:]+)\]',  # [full IPv6]
+                r'\(([0-9a-fA-F:]+::[0-9a-fA-F:]*)\)',  # (IPv6)
+            ]
+            
+            for pattern in ipv6_patterns:
+                matches = re.findall(pattern, last_received)
+                for ip in matches:
+                    if ':' in ip and len(ip) > 4:  # Basic IPv6 validation
+                        return ip
+            
+            # IPv4 patterns
             ip_patterns = [
                 r'from.*?\[(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\]',  # [IP]
                 r'from.*?\((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\)',  # (IP)
@@ -181,12 +195,16 @@ class EmailHeaderParser:
         """Extract mail server hostname from Received headers."""
         received = msg.get_all('Received', [])
         if received:
-            # Get the first Received header (last server before recipient)
-            first_received = received[0]
-            # Look for "from hostname"
-            match = re.search(r'from\s+([a-zA-Z0-9\-\.]+)', first_received)
-            if match:
-                return match.group(1)
+            # Check multiple Received headers to find actual mail server
+            # Skip internal servers (Gmail, etc.) and find external sender's server
+            for received_header in received:
+                # Look for "from hostname" pattern
+                match = re.search(r'from\s+([a-zA-Z0-9][\w\-\.]+\.[a-zA-Z]{2,})', received_header, re.IGNORECASE)
+                if match:
+                    hostname = match.group(1)
+                    # Skip localhost and generic internal names
+                    if not hostname.startswith('localhost') and len(hostname) > 5:
+                        return hostname
         return ''
     
     @staticmethod
