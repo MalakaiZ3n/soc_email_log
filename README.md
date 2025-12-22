@@ -126,7 +126,9 @@ This project is meant to:
 # Setup
 git clone https://github.com/[your-username]/soc_email_log
 cd soc_email_log
-pip install -r requirements.txt
+pip install -r requirements-full.txt
+# Or is you have pandas version issues
+pip install -r requirements-core.txt
 
 # Import your existing phishing data
 python data/import_from_sheets.py
