@@ -28,7 +28,7 @@ Received: from mail.server.com ([203.0.113.42])
 ..." 
                 required>{{ raw_header if raw_header else '' }}</textarea>
             <small class="text-muted">
-                 Tip: View email source / Show original to get the full header
+                💡 Tip: View email source / Show original to get the full header
             </small>
         </div>
         
@@ -40,17 +40,44 @@ Received: from mail.server.com ([203.0.113.42])
     {% else %}
     {# Step 2: Review Parsed Data and Save #}
     
-    {% if parsed_data.suspicious_indicators %}
+    {# Separate indicators by severity #}
+    {% set high_medium_indicators = [] %}
+    {% set info_indicators = [] %}
+    {% for indicator in parsed_data.suspicious_indicators %}
+        {% if indicator.severity == 'Info' %}
+            {% set _ = info_indicators.append(indicator) %}
+        {% else %}
+            {% set _ = high_medium_indicators.append(indicator) %}
+        {% endif %}
+    {% endfor %}
+    
+    {# Display actual suspicious indicators (High/Medium) #}
+    {% if high_medium_indicators %}
     <div style="background: #7f1d1d; border: 1px solid #991b1b; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
-        <strong style="color: #fca5a5;"> Suspicious Indicators Detected:</strong>
+        <strong style="color: #fca5a5;">Suspicious Indicators Detected:</strong>
         <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
-        {% for indicator in parsed_data.suspicious_indicators %}
+        {% for indicator in high_medium_indicators %}
             <li>
-                <span class="badge badge-{{ 'danger' if indicator.severity == 'High' else 'warning' if indicator.severity == 'Medium' else 'info' }}">
+                <span class="badge badge-{{ 'danger' if indicator.severity == 'High' else 'warning' }}">
                     {{ indicator.severity }}
                 </span>
                 {{ indicator.description }}
                 <br><small class="text-muted">{{ indicator.threat }}</small>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    {# Display informational indicators separately (Info) #}
+    {% if info_indicators %}
+    <div style="background: #1e3a5f; border: 1px solid #2563eb; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+        <strong style="color: #60a5fa;">Manual Verification Recommended:</strong>
+        <ul style="margin-top: 0.5rem; margin-left: 1.5rem; color: #cbd5e1;">
+        {% for indicator in info_indicators %}
+            <li>
+                {{ indicator.description }}
+                <br><small style="color: #94a3b8;">{{ indicator.threat }}</small>
             </li>
         {% endfor %}
         </ul>
@@ -133,7 +160,7 @@ Received: from mail.server.com ([203.0.113.42])
             </div>
             
             <div class="form-group">
-                <label for="virustotal_results">🛡️ VirusTotal Results</label>
+                <label for="virustotal_results"> VirusTotal Results</label>
                 <input type="text" name="virustotal_results" id="virustotal_results" 
                        placeholder="e.g., 45/70 detections or VT link">
                 <small class="text-muted">
@@ -154,7 +181,7 @@ Received: from mail.server.com ([203.0.113.42])
         <div class="form-group">
             <details style="background: #0f1419; padding: 1rem; border-radius: 6px; border: 1px solid #2a2f3e;">
                 <summary style="cursor: pointer; font-weight: 600; color: #9ca3af;">
-                    📄 View Raw Header
+                     View Raw Header
                 </summary>
                 <pre style="margin-top: 1rem; max-height: 300px; overflow-y: auto;">{{ raw_header }}</pre>
             </details>
@@ -162,7 +189,7 @@ Received: from mail.server.com ([203.0.113.42])
         
         <div style="display: flex; gap: 1rem;">
             <button type="submit" name="save_email" class="btn btn-success">
-                 Save to Database
+                ✓ Save to Database
             </button>
             <a href="{{ url_for('main.log_email') }}" class="btn btn-secondary">
                 ← Start Over

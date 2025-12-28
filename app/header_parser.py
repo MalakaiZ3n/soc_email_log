@@ -249,11 +249,11 @@ class EmailHeaderParser:
     def _detect_suspicious_patterns(result, msg):
         """
         Detect suspicious patterns in the email header.
-        This helps analysts quickly spot red flags.
+        Uses smart heuristics to identify legitimate threats.
         """
         indicators = []
         
-        # Check for mismatched From and Return-Path
+        # HIGH SEVERITY: Domain mismatch (spoofing indicator)
         from_addr = result['from_address']
         return_path = result['smtp_sender']
         
@@ -269,38 +269,106 @@ class EmailHeaderParser:
                     'threat': 'Possible spoofing attempt'
                 })
         
-        # Check authentication failures
+        # HIGH SEVERITY: Mail server domain mismatch
+        sender_domain = result.get('sender_domain', '')
+        mail_server = result.get('mail_server', '')
+        
+        if sender_domain and mail_server and sender_domain not in mail_server:
+            # Check if it's a known legitimate service (like Gmail, Office365, etc.)
+            legitimate_services = [
+                'google.com', 'googlemail.com', 'gmail.com',
+                'outlook.com', 'office365.com', 'protection.outlook.com',
+                'yahoo.com', 'aol.com', 'icloud.com',
+                'sendgrid.net', 'mailgun.org', 'amazonses.com'
+            ]
+            
+            is_legitimate_service = any(service in mail_server.lower() for service in legitimate_services)
+            
+            if not is_legitimate_service:
+                # Extract base domain for comparison (handles subdomains)
+                sender_base = '.'.join(sender_domain.split('.')[-2:]) if '.' in sender_domain else sender_domain
+                if sender_base not in mail_server.lower():
+                    indicators.append({
+                        'type': 'mail_server_mismatch',
+                        'severity': 'High',
+                        'description': f'Mail server ({mail_server}) does not match sender domain ({sender_domain})',
+                        'threat': 'Email may not be sent from claimed organization'
+                    })
+        
+        # HIGH SEVERITY: Multiple authentication failures
         auth = result.get('authentication_results', '').lower()
-        if 'fail' in auth or 'none' in auth:
+        spf_fail = 'spf=fail' in auth or 'spf: fail' in auth
+        dkim_fail = 'dkim=fail' in auth or 'dkim: fail' in auth
+        dmarc_fail = 'dmarc=fail' in auth or 'dmarc: fail' in auth
+        
+        fail_count = sum([spf_fail, dkim_fail, dmarc_fail])
+        
+        if fail_count >= 2:
+            # Two or more failures is highly suspicious
+            failed_checks = []
+            if spf_fail: failed_checks.append('SPF')
+            if dkim_fail: failed_checks.append('DKIM')
+            if dmarc_fail: failed_checks.append('DMARC')
+            
+            indicators.append({
+                'type': 'multiple_auth_failures',
+                'severity': 'High',
+                'description': f'Multiple authentication failures: {", ".join(failed_checks)}',
+                'threat': 'Strong indicator of spoofing or unauthorized sending'
+            })
+        elif fail_count == 1:
+            # Single failure is medium risk
             indicators.append({
                 'type': 'auth_failure',
                 'severity': 'Medium',
-                'description': 'Email authentication checks failed',
+                'description': 'Email authentication check failed',
                 'threat': 'Sender may not be legitimate'
             })
         
-        # Check for suspicious subject keywords
+        # MEDIUM SEVERITY: Suspicious subject patterns
         subject = result.get('subject', '').lower()
-        phishing_keywords = ['urgent', 'verify', 'suspended', 'unusual activity', 'confirm', 'password']
-        found_keywords = [kw for kw in phishing_keywords if kw in subject]
+        high_risk_keywords = ['urgent', 'verify', 'suspended', 'unusual activity', 'confirm your account', 'security alert']
+        found_keywords = [kw for kw in high_risk_keywords if kw in subject]
         
         if found_keywords:
             indicators.append({
                 'type': 'suspicious_subject',
-                'severity': 'Low',
+                'severity': 'Medium',
                 'description': f'Subject contains phishing keywords: {", ".join(found_keywords)}',
                 'threat': 'Common social engineering tactic'
             })
         
-        # Check for foreign sender IP (basic check)
-        sender_ip = result.get('sender_ip', '')
-        if sender_ip and not sender_ip.startswith(('209.', '208.', '192.', '10.')):
-            # This is simplistic - in production you'd use geolocation
+        # MEDIUM SEVERITY: Free email service used for business
+        if sender_domain and any(free_domain in sender_domain.lower() for free_domain in 
+                                 ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com']):
+            # Check if subject suggests business/official communication
+            business_keywords = ['invoice', 'payment', 'order', 'shipment', 'account', 'statement']
+            if any(kw in subject for kw in business_keywords):
+                indicators.append({
+                    'type': 'free_email_business',
+                    'severity': 'Medium',
+                    'description': f'Business communication from free email service ({sender_domain})',
+                    'threat': 'Legitimate businesses typically use company domains'
+                })
+        
+        # LOW SEVERITY: Recently registered domain (check TLD patterns)
+        suspicious_tlds = ['.tk', '.ml', '.ga', '.cf', '.gq', '.xyz', '.top', '.online', '.site']
+        if sender_domain and any(sender_domain.endswith(tld) for tld in suspicious_tlds):
             indicators.append({
-                'type': 'external_ip',
+                'type': 'suspicious_tld',
+                'severity': 'Medium',
+                'description': f'Sender uses suspicious TLD: {sender_domain}',
+                'threat': 'These TLDs are frequently used in phishing campaigns'
+            })
+        
+        # INFO: Sender IP for manual verification
+        sender_ip = result.get('sender_ip', '')
+        if sender_ip:
+            indicators.append({
+                'type': 'sender_ip_info',
                 'severity': 'Info',
-                'description': f'Email originated from external IP: {sender_ip}',
-                'threat': 'Verify sender legitimacy'
+                'description': f'Sender IP: {sender_ip}',
+                'threat': 'Verify IP reputation using VirusTotal or AbuseIPDB'
             })
         
         return indicators

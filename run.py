@@ -20,6 +20,11 @@ from app import create_app
 # Create the Flask app
 app = create_app()
 
+# Ensure secret key is set (double-check for safety)
+if not app.config.get('SECRET_KEY') or app.config['SECRET_KEY'] == '' or app.config['SECRET_KEY'] is None:
+    app.config['SECRET_KEY'] = 'soc-email-log-fallback-secret-key-2025'
+    print("Warning: Using fallback SECRET_KEY. Set environment variable for production.")
+
 if __name__ == '__main__':
     print("""
 ╔════════════════════════════════════════════════════════════╗
