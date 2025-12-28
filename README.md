@@ -4,7 +4,7 @@ logging suspicious emails for security operations analysis
 # SOC Email Log - Phishing Threat Intelligence Platform
 
 ##  Mission
-A practical threat intelligence platform for tracking, analyzing, and documenting phishing campaigns - built by an aspiring SOC analyst to demonstrate real-world threat hunting capabilities.
+A practical threat intelligence platform for tracking, analyzing, and documenting phishing campaigns - designed to help learn a SOC analyst role for real-world threat hunting capabilities.
 
 
 **Core SOC Analyst Skills:**
@@ -217,7 +217,7 @@ Received: from [163.5.221.43] (evil.com) ← Step 1 (START - actual sender!)
     Wed, 24 Dec 2025 17:46:11 +0000
 ```
 
-**Email Journey:**
+**Email Journey Example:**
 1. Originated from IP `163.5.221.43` at 17:46:11
 2. Passed through Microsoft at 17:46:12 (1 sec)
 3. Scanned by Proofpoint at 17:46:15 (3 sec)
@@ -251,14 +251,14 @@ Message-ID: <random12345@service-update-6483.tk>
 |---------|----------|------------|
 | Return-Path (.tk domain) | 🚩 | Free domain service |
 | From (microsoft.com) | - | Looks legitimate |
-| **Mismatch:** Return ≠ From | 🚩🚩🚩 | **SPOOFING!** |
+| **Mismatch:** Return ≠ From | 🚩 | **SPOOFING!** |
 | SPF fail | 🚩 | Not authorized |
 | DKIM fail | 🚩 | No valid signature |
 | DMARC fail | 🚩 | Fails policy |
 | Unknown sender IP | 🚩 | No reverse DNS |
 | Message-ID (.tk) | 🚩 | Doesn't match From |
 
-**Verdict: 🚨 100% PHISHING**
+**Verdict: 100% PHISHING**
 
 ---
 
@@ -269,7 +269,7 @@ Message-ID: <random12345@service-update-6483.tk>
 **[ Email Header Analysis Guide](HEADER_ANALYSIS_GUIDE.md)**
 
 **Covers:**
-- Detailed safe extraction methods for all email platforms
+- Detailed safe extraction methods for multiple email platforms
 - Step-by-step header reading tutorial
 - Complete authentication explanation (SPF/DKIM/DMARC)
 - Infrastructure analysis techniques
@@ -515,7 +515,7 @@ MIT License - Feel free to learn from and adapt this project
 
 ##  About
 
-Built by an aspiring SOC analyst to demonstrate practical threat hunting skills and transition from IT management to cybersecurity threat analysis. This platform showcases:
+Built to learn practical threat hunting skills for cybersecurity threat analysis. This platform showcases:
 
 - Real-world threat intelligence workflows
 - Practical email forensics capabilities
@@ -523,7 +523,7 @@ Built by an aspiring SOC analyst to demonstrate practical threat hunting skills 
 - Automation and tool development skills
 - Understanding of attacker infrastructure and TTPs
 
-**Goal**: Demonstrate readiness for SOC Analyst and Threat Intelligence roles through hands-on threat hunting rather than just certifications.
+**Goal**: Learn SOC Analyst and Threat Intelligence roles through hands-on threat hunting rather than just certifications.
 
 ---
 
@@ -533,11 +533,6 @@ Built by an aspiring SOC analyst to demonstrate practical threat hunting skills 
 - **[ Malware Tracking Guide](MALWARE_TRACKING_GUIDE.md)** - File hash analysis and VirusTotal integration
 - **[ Edit Feature Guide](EDIT_FEATURE_GUIDE.md)** - Progressive investigation workflows
 
-##  Connect
-
-- GitHub: [your-github-username]
-- LinkedIn: [your-linkedin]
-- Portfolio: [your-website]
 
 ---
 
