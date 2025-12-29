@@ -11,17 +11,24 @@ Then open your browser to: http://localhost:5000
 
 import os
 import sys
+from dotenv import load_dotenv
+from flask import Flask
+
+load_dotenv()
 
 # Add current directory to path for imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app
 
+
 # Create the Flask app
 app = create_app()
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 # Ensure secret key is set (double-check for safety)
 if not app.config.get('SECRET_KEY') or app.config['SECRET_KEY'] == '' or app.config['SECRET_KEY'] is None:
+    # Warn that insecure key is used. Not for production
     app.config['SECRET_KEY'] = 'soc-email-log-fallback-secret-key-2025'
     print("Warning: Using fallback SECRET_KEY. Set environment variable for production.")
 
